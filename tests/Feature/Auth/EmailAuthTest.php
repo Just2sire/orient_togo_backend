@@ -59,7 +59,6 @@ class EmailAuthTest extends TestCase
             'email' => 'test@example.com',
             'password' => 'password123'
         ]);
-        if ($response->status() !== 200) dd($response->json());
 
         $response->assertOk()
             ->assertJsonPath('success', true)
@@ -94,7 +93,6 @@ class EmailAuthTest extends TestCase
             'email' => 'test@example.com',
             'password' => 'password123'
         ]);
-        if ($response->status() !== 200) dd($response->json());
 
         $response->assertStatus(500)
             ->assertJsonPath('message', 'Ce compte est désactivé.');

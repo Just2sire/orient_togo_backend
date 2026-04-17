@@ -42,7 +42,6 @@ class SessionTest extends TestCase
         Sanctum::actingAs($user);
 
         $response = $this->postJson('/api/v1/auth/logout');
-        if ($response->status() !== 200) dd($response->json());
 
         $response->assertOk()
             ->assertJsonPath('message', 'Déconnexion réussie.');
