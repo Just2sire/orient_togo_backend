@@ -40,7 +40,6 @@ class AuditLog extends Model
     protected function casts(): array
     {
         return [
-            'user_id' => 'uuid',
             'old_values' => 'array',
             'new_values' => 'array',
         ];

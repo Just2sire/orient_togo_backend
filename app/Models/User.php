@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -71,20 +72,25 @@ class User extends Authenticatable
         $this->attributes['role'] = $value->value;
     }
 
-    // public function userProfile(): HasOne
-    // {
-    //     return $this->hasOne(UserProfile::class);
-    // }
+    public function userProfile(): HasOne
+    {
+        return $this->hasOne(UserProfile::class);
+    }
 
-    // public function userFavorites(): HasMany
-    // {
-    //     return $this->hasMany(UserFavorite::class);
-    // }
+    public function userFavorites(): HasMany
+    {
+        return $this->hasMany(UserFavorite::class);
+    }
 
-    // public function userDevices(): HasMany
-    // {
-    //     return $this->hasMany(UserDevice::class);
-    // }
+    public function userDevices(): HasMany
+    {
+        return $this->hasMany(UserDevice::class);
+    }
+
+    public function otpCodes(): HasMany
+    {
+        return $this->hasMany(OtpCode::class, 'phone', 'phone');
+    }
 
     public function sessionQuizzes()
     {

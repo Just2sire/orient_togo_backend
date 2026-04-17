@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['phone', 'code', 'type', 'expires_at', 'used_at'])]
+#[Fillable(['phone', 'code', 'type', 'attempts', 'is_used', 'expires_at', 'used_at', 'ip_address'])]
 class OtpCode extends Model
 {
     use HasUuids;
@@ -33,7 +33,14 @@ class OtpCode extends Model
             'expires_at' => 'datetime',
             'used_at' => 'datetime',
             'created_at' => 'datetime',
+            'is_used' => 'boolean',
+            'attempts' => 'integer',
         ];
+    }
+
+    public function isExhausted(): bool
+    {
+        return $this->attempts >= 3;
     }
 
     /**
@@ -41,7 +48,8 @@ class OtpCode extends Model
      */
     public function isValid(): bool
     {
-        return $this->used_at === null
+        return ! $this->is_used
+            && ! $this->isExhausted()
             && $this->expires_at->isFuture();
     }
 
@@ -50,6 +58,6 @@ class OtpCode extends Model
      */
     public function markAsUsed(): void
     {
-        $this->update(['used_at' => now()]);
+        $this->update(['is_used' => true, 'used_at' => now()]);
     }
 }

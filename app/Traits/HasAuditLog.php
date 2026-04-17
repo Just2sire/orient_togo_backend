@@ -2,7 +2,7 @@
 
 namespace App\Traits;
 
-use App\Http\Services\AuditLogService;
+use App\Services\AuditLogService;
 use Illuminate\Database\Eloquent\Model;
 
 trait HasAuditLog

@@ -6,6 +6,7 @@ enum OtpTypeEnum: string
 {
     case Register = 'register';
     case Login = 'login';
+    case VerifyPhone = 'veify_phone';
 
     public static function values(): array
     {

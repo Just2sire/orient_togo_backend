@@ -190,7 +190,7 @@ class RepoPattern extends Command
     private function collectExpectedFiles(string $name): array
     {
         $files = [
-            ['Trait ApiResponse', 'app/Http/Traits/ApiResponse.php'],
+            ['Trait ApiResponse', 'app/Traits/ApiResponse.php'],
         ];
 
         if ($this->option('full') || $this->option('all')) {
@@ -281,10 +281,12 @@ class RepoPattern extends Command
 
         $content = $this->files->get($path);
 
-        foreach ([
-            'use App\\Models\\Traits\\HasOrganization;',
-            'use Illuminate\\Database\\Eloquent\\Concerns\\HasUuids;',
-        ] as $import) {
+        foreach (
+            [
+                'use App\\Models\\Traits\\HasOrganization;',
+                'use Illuminate\\Database\\Eloquent\\Concerns\\HasUuids;',
+            ] as $import
+        ) {
             if (! str_contains($content, $import)) {
                 $content = str_replace(
                     'use Illuminate\\Database\\Eloquent\\Factories\\HasFactory;',
@@ -531,7 +533,7 @@ class RepoPattern extends Command
         }
 
         $route = "\n    Route::apiResource('{$kebab}', {$controllerFqn}::class)"
-               ."->names('{$routeName}');";
+            ."->names('{$routeName}');";
 
         if (preg_match(
             "/(Route::middleware\(['\"]auth:sanctum['\"]\)->group\(function\s*\(\)\s*\{)(.*?)(\}\);)/s",
@@ -553,7 +555,7 @@ class RepoPattern extends Command
 
     private function ensureApiResponseTraitExists(): void
     {
-        $path = app_path('Http/Traits/ApiResponse.php');
+        $path = app_path('Traits/ApiResponse.php');
 
         if ($this->files->exists($path)) {
             return;
@@ -562,7 +564,7 @@ class RepoPattern extends Command
         $this->write(
             label: 'Trait ApiResponse',
             path: $path,
-            relative: 'app/Http/Traits/ApiResponse.php',
+            relative: 'app/Traits/ApiResponse.php',
             content: $this->stubApiResponseTrait(),
         );
     }
@@ -876,40 +878,47 @@ PHP;
         // Avec repository
         if ($hasRep) {
             $useRepository = "\nuse App\\Repositories\\Contracts\\{$name}RepositoryInterface;";
+            $useModel = "\nuse App\\Models\\{$name};";
             $constructor = "    public function __construct(\n        private readonly {$name}RepositoryInterface \$repository\n    ) {}";
-            $indexBody = "\$paginator = \$this->repository->paginate(\$request->all(), \$request->integer('per_page', 15));\n\n            return \$this->paginated(\$paginator".($hasRes ? ", {$name}Resource::class" : '').');';
-            $showBody = "return \$this->success({$dataWrap('$'.$var)}, '{$name} récupéré.');";
-            $storeBody = "\$model = \$this->repository->create({$storeData});\n\n            return \$this->created({$dataWrap('$model')});";
-            $updateBody = "\$model = \$this->repository->update(\${$var}, {$updateData});\n\n            return \$this->updated({$dataWrap('$model')});";
-            $destroyBody = "\$this->repository->delete(\${$var});\n\n            return \$this->deleted();";
+            $indexBody = "\$paginator = \$this->repository->paginate(\$request->all(), \$request->integer('per_page', 15));\n            return \$this->paginated(\$paginator".($hasRes ? ", {$name}Resource::class" : '').');';
+            $showBody = "\$model = \$this->repository->findOrFail(\${$var}->id);\n            return \$this->success({$dataWrap('$model')}, '{$name} récupéré.');";
+            $storeBody = "\$model = \$this->repository->create({$storeData});\n            return \$this->created({$dataWrap('$model')});";
+            $updateBody = "\$model = \$this->repository->update(\${$var}, {$updateData});\n            return \$this->updated({$dataWrap('$model')});";
+            $destroyBody = "\$this->repository->delete(\${$var});\n            return \$this->deleted();";
+            $useDB = '';
+            $showUse = "\${$var}";
         } else {
             $useRepository = '';
+            $useModel = "\nuse App\\Models\\{$name};";
+            $useDB = "\nuse Illuminate\\Support\\Facades\\DB;";
             $constructor = '';
-            $indexBody = "\${$plural} = {$name}::query()\n                ->when(\$request->search, fn (\$q, \$v) => \$q->where('name', 'like', \"%{\$v}%\"))\n                ->latest()\n                ->paginate(\$request->integer('per_page', 15));\n\n            return \$this->paginated(\${$plural}".($hasRes ? ", {$name}Resource::class" : '').');';
+            $indexBody = "\${$plural} = {$name}::query()\n                ->when(\$request->search, fn (\$q, \$v) => \$q->where('name', 'like', \"%{\$v}%\"))\n                ->latest()\n                ->paginate(\$request->integer('per_page', 15));\n            return \$this->paginated(\${$plural}".($hasRes ? ", {$name}Resource::class" : '').');';
             $showBody = "return \$this->success({$dataWrap('$'.$var)}, '{$name} récupéré.');";
-            $storeBody = "\$model = DB::transaction(fn () => {$name}::create({$storeData}));\n\n            return \$this->created({$dataWrap('$model')});";
-            $updateBody = "DB::transaction(fn () => \${$var}->update({$updateData}));\n\n            return \$this->updated({$dataWrap('$'.$var.'->fresh()')});";
-            $destroyBody = "\${$var}->delete();\n\n            return \$this->deleted();";
+            $storeBody = "\$model = DB::transaction(fn () => {$name}::create({$storeData}));\n            return \$this->created({$dataWrap('$model')});";
+            $updateBody = "DB::transaction(fn () => \${$var}->update({$updateData}));\n            return \$this->updated({$dataWrap('$'.$var.'->fresh()')});";
+            $destroyBody = "\${$var}->delete();\n            return \$this->deleted();";
+            $showUse = "\${$var}";
         }
 
-        $useModel = $hasRep ? '' : "\nuse App\\Models\\{$name};";
-        $useDB = $hasRep ? '' : "\nuse Illuminate\\Support\\Facades\\DB;";
+        // Variables pour les closures (CORRIGÉ)
+        $storeUse = $hasReq ? '$request' : '$data';
+        $updateUse = $hasReq ? '$request, $'.$var : '$data, $'.$var;
 
         return <<<PHP
 <?php
-
+ 
 namespace App\Services;
 {$useRequest}{$useResource}{$useRepository}{$useModel}{$useDB}
-use App\Http\Traits\ApiResponse;
+use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-
+ 
 class {$name}Service
 {
     use ApiResponse;
-
+ 
 {$constructor}
-
+ 
     /**
      * Retourne la liste des {$plural} (avec filtres et pagination).
      */
@@ -919,38 +928,37 @@ class {$name}Service
             {$indexBody}
         }, 'Impossible de récupérer les {$plural}.');
     }
-
+ 
     /**
      * Affiche un(e) {$name}.
      */
     public function show({$name} \${$var}): JsonResponse
     {
-        return \$this->try(
-            fn () => {$showBody},
-            'Impossible de récupérer ce {$var}.'
-        );
+        return \$this->try(function () use ({$showUse}) {
+            {$showBody}
+        }, 'Impossible de récupérer ce {$var}.');
     }
-
+ 
     /**
      * Crée un(e) {$name}.
      */
     public function store({$storeArg}): JsonResponse
     {
-        return \$this->try(function () use (\$request) {
+        return \$this->try(function () use ({$storeUse}) {
             {$storeBody}
         }, 'Impossible de créer le {$var}.');
     }
-
+ 
     /**
      * Met à jour un(e) {$name}.
      */
     public function update({$name} \${$var}, {$updateArg}): JsonResponse
     {
-        return \$this->try(function () use (\$request, \${$var}) {
+        return \$this->try(function () use ({$updateUse}) {
             {$updateBody}
         }, 'Impossible de mettre à jour le {$var}.');
     }
-
+ 
     /**
      * Supprime un(e) {$name}.
      */
@@ -987,7 +995,7 @@ PHP;
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use {$useReq}
+{$useReq}
 use App\Models\\{$name};
 use App\Services\\{$name}Service;
 use Illuminate\Http\JsonResponse;

@@ -14,11 +14,14 @@ return new class extends Migration
     {
         Schema::create('otp_codes', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('phone')->index();
-            $table->string('code', 6);
+            $table->string('phone', 20)->index();
+            $table->string('code');
             $table->enum('type', OtpTypeEnum::values());
+            $table->tinyInteger('attempts')->default(0);
+            $table->boolean('is_used')->default(false);
             $table->timestamp('expires_at');
             $table->timestamp('used_at')->nullable();
+            $table->ipAddress('ip_address')->nullable();
             $table->timestamp('created_at')->useCurrent();
         });
     }
