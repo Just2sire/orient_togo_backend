@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PlatformEnum;
+use App\Traits\HasAuditLog;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['user_id', 'push_token', 'platform', 'user_agent', 'last_active_at'])]
 class UserDevice extends Model
 {
-    use HasFactory, HasUuids;
+    use HasAuditLog, HasFactory, HasUuids;
 
     /**
      * The primary key type is UUID.
@@ -36,7 +37,6 @@ class UserDevice extends Model
     protected function casts(): array
     {
         return [
-            'user_id' => 'uuid',
             'last_active_at' => 'datetime',
             'platform' => PlatformEnum::class,
         ];

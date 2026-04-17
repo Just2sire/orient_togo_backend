@@ -3,6 +3,9 @@
 use App\Http\Controllers\Api\Auth\EmailAuthController;
 use App\Http\Controllers\Api\Auth\OtpController;
 use App\Http\Controllers\Api\Auth\SessionController;
+use App\Http\Controllers\Api\UserProfileController;
+use App\Http\Controllers\Api\UserDeviceController;
+use App\Http\Controllers\Api\UserFavoriteController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -36,6 +39,19 @@ Route::prefix('v1')->group(function () {
         });
     });
 
-    // --- Autres ressources (Phase B+) ---
-    // Route::apiResource('users', UserController::class);
+    // --- Utilisateur (Connecté) ---
+    Route::middleware('auth:sanctum')->prefix('user')->group(function () {
+        
+        // Profil & Onboarding
+        Route::get('profile', [UserProfileController::class, 'show'])->name('user.profile.show');
+        Route::put('profile', [UserProfileController::class, 'update'])->name('user.profile.update');
+        Route::patch('profile/onboarding', [UserProfileController::class, 'completeOnboarding'])->name('user.profile.onboarding');
+
+        // Appareils
+        Route::apiResource('devices', UserDeviceController::class)->only(['index', 'store']);
+
+        // Favoris
+        Route::get('favorites', [UserFavoriteController::class, 'index'])->name('user.favorites.index');
+        Route::post('favorites/toggle', [UserFavoriteController::class, 'toggle'])->name('user.favorites.toggle');
+    });
 });

@@ -8,7 +8,9 @@ use App\Services\Auth\AuthService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(name: 'Session & Profil', description: 'Endpoints pour la gestion de la session utilisateur')]
 class SessionController extends Controller
 {
     use ApiResponse;
@@ -17,9 +19,21 @@ class SessionController extends Controller
         private readonly AuthService $authService
     ) {}
 
-    /**
-     * Retourne les informations de l'utilisateur connecté.
-     */
+    #[OA\Get(
+        path: '/v1/auth/me',
+        summary: 'Récupérer le profil connecté',
+        security: [['sanctum' => []]],
+        tags: ['Session & Profil']
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'Profil récupéré',
+        content: new OA\JsonContent(properties: [
+            new OA\Property(property: 'success', type: 'boolean', example: true),
+            new OA\Property(property: 'data', ref: '#/components/schemas/UserResource'),
+        ])
+    )]
+    #[OA\Response(response: 401, description: 'Non authentifié')]
     public function me(Request $request): JsonResponse
     {
         return $this->try(function () use ($request) {
@@ -27,9 +41,26 @@ class SessionController extends Controller
         });
     }
 
-    /**
-     * Déconnecte l'utilisateur (révoque le token).
-     */
+    #[OA\Post(
+        path: '/v1/auth/logout',
+        summary: 'Déconnexion',
+        security: [['sanctum' => []]],
+        tags: ['Session & Profil']
+    )]
+    #[OA\RequestBody(
+        content: new OA\JsonContent(properties: [
+            new OA\Property(property: 'all_devices', description: "Si vrai, révoque tous les tokens de l'utilisateur", type: 'boolean', example: false),
+        ])
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'Déconnexion réussie',
+        content: new OA\JsonContent(properties: [
+            new OA\Property(property: 'success', type: 'boolean', example: true),
+            new OA\Property(property: 'message', type: 'string', example: 'Déconnexion réussie.'),
+        ])
+    )]
+    #[OA\Response(response: 401, description: 'Non authentifié')]
     public function logout(Request $request): JsonResponse
     {
         return $this->try(function () use ($request) {

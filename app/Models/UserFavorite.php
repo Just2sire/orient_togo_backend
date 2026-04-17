@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Traits\HasAuditLog;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -10,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['user_id', 'favorable_type', 'favorable_id'])]
 class UserFavorite extends Model
 {
-    use HasUuids;
+    use HasAuditLog, HasFactory, HasUuids;
 
     /**
      * The primary key type is UUID.
@@ -39,8 +41,7 @@ class UserFavorite extends Model
     protected function casts(): array
     {
         return [
-            'user_id' => 'uuid',
-            'favorable_id' => 'uuid',
+            //
         ];
     }
 

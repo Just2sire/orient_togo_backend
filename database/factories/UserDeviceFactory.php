@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\PlatformEnum;
+use App\Models\User;
 use App\Models\UserDevice;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -15,9 +17,9 @@ class UserDeviceFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => UserDevice::factory(),
-            'push_token' => fake()->unique()->uuid(),
-            'platform' => fake()->randomElement(['android', 'ios', 'web']),
+            'user_id' => User::factory(),
+            'push_token' => fake()->unique()->sha256(),
+            'platform' => fake()->randomElement(PlatformEnum::cases()),
             'user_agent' => fake()->userAgent(),
             'last_active_at' => now(),
         ];
@@ -26,21 +28,21 @@ class UserDeviceFactory extends Factory
     public function android(): static
     {
         return $this->state(fn (array $attributes) => [
-            'platform' => 'android',
+            'platform' => PlatformEnum::Android,
         ]);
     }
 
     public function ios(): static
     {
         return $this->state(fn (array $attributes) => [
-            'platform' => 'ios',
+            'platform' => PlatformEnum::iOS,
         ]);
     }
 
     public function web(): static
     {
         return $this->state(fn (array $attributes) => [
-            'platform' => 'web',
+            'platform' => PlatformEnum::Web,
         ]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\RegionEnum;
 use App\Enums\SchoolLevelEnum;
+use App\Traits\HasAuditLog;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['user_id', 'username', 'level', 'class', 'region', 'city', 'dark_mode', 'notifications_on', 'onboarding_done', 'quiz_preferences', 'last_level_seen'])]
 class UserProfile extends Model
 {
-    use HasFactory, HasUuids;
+    use HasAuditLog, HasFactory, HasUuids;
 
     /**
      * The primary key type is UUID.

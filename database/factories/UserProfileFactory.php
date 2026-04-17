@@ -19,23 +19,23 @@ class UserProfileFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'username' => fake()->userName(),
-            'level' => fake()->randomElement(SchoolLevelEnum::values()),
+            'username' => fake()->unique()->userName(),
+            'level' => fake()->randomElement(SchoolLevelEnum::cases()),
             'class' => 'Terminale D',
-            'region' => fake()->randomElement(RegionEnum::values()),
-            'city' => fake()->randomElement(RegionEnum::values()),
+            'region' => fake()->randomElement(RegionEnum::cases()),
+            'city' => fake()->city(),
             'dark_mode' => fake()->boolean(),
             'notifications_on' => fake()->boolean(80),
             'onboarding_done' => true,
             'quiz_preferences' => [],
-            'last_level_seen' => SchoolLevelEnum::HighSchool->value,
+            'last_level_seen' => SchoolLevelEnum::HighSchool,
         ];
     }
 
     public function highSchool(): static
     {
         return $this->state(fn (array $attributes) => [
-            'level' => SchoolLevelEnum::HighSchool->value,
+            'level' => SchoolLevelEnum::HighSchool,
             'class' => fake()->randomElement(['Seconde', 'Première', 'Terminale']),
         ]);
     }
@@ -43,8 +43,15 @@ class UserProfileFactory extends Factory
     public function higherEd(): static
     {
         return $this->state(fn (array $attributes) => [
-            'level' => SchoolLevelEnum::HigherEd->value,
+            'level' => SchoolLevelEnum::HigherEd,
             'class' => fake()->randomElement(['L1', 'L2', 'L3', 'M1', 'M2']),
+        ]);
+    }
+
+    public function onboardingPending(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'onboarding_done' => false,
         ]);
     }
 }
