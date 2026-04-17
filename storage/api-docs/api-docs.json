@@ -1,0 +1,816 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "OrientTogo API",
+        "description": "Documentation officielle de l'API OrientTogo (Laravel 13)",
+        "contact": {
+            "name": "Équipe Technique OrientTogo",
+            "email": "contact@orienttogo.tg"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api",
+            "description": "Serveur Local / Base Path"
+        }
+    ],
+    "paths": {
+        "/v1/auth/login": {
+            "post": {
+                "tags": [
+                    "Authentification Email"
+                ],
+                "summary": "Connexion par email",
+                "operationId": "96270667b9e14cea6beb12f1d79d15cd",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "test@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    },
+                                    "device_name": {
+                                        "type": "string",
+                                        "example": "Chrome Windows"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Connexion réussie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/AuthTokenResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Identifiants invalides"
+                    }
+                }
+            }
+        },
+        "/v1/auth/register": {
+            "post": {
+                "tags": [
+                    "Authentification Email"
+                ],
+                "summary": "Inscription par email",
+                "operationId": "7b5c22aaff17dc577012fb141acf2346",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "newuser@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    },
+                                    "device_name": {
+                                        "type": "string",
+                                        "example": "Android App"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Compte créé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Compte créé avec succès."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/AuthTokenResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    }
+                }
+            }
+        },
+        "/v1/auth/otp/send": {
+            "post": {
+                "tags": [
+                    "Authentification OTP"
+                ],
+                "summary": "Demander un code OTP",
+                "operationId": "225ef829b32821440c8b47cf44c5fe1d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "phone"
+                                ],
+                                "properties": {
+                                    "phone": {
+                                        "description": "Numéro de téléphone (8 chiffres)",
+                                        "type": "string",
+                                        "example": "90010203"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "login",
+                                        "enum": [
+                                            "login",
+                                            "register"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Code OTP envoyé",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Code OTP envoyé avec succès."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    }
+                }
+            }
+        },
+        "/v1/auth/otp/verify": {
+            "post": {
+                "tags": [
+                    "Authentification OTP"
+                ],
+                "summary": "Vérifier l'OTP et se connecter",
+                "operationId": "1297f1b602cfbcca94e0aee04e535030",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "phone",
+                                    "code"
+                                ],
+                                "properties": {
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "90010203"
+                                    },
+                                    "code": {
+                                        "description": "Code à 6 chiffres reçu par SMS",
+                                        "type": "string",
+                                        "example": "123456"
+                                    },
+                                    "device_name": {
+                                        "type": "string",
+                                        "example": "iPhone 15 Pro"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Authentification réussie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Authentification réussie."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/AuthTokenResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Code invalide ou expiré"
+                    }
+                }
+            }
+        },
+        "/v1/auth/me": {
+            "get": {
+                "tags": [
+                    "Session & Profil"
+                ],
+                "summary": "Récupérer le profil connecté",
+                "operationId": "907bc17f9d212df76002335325a23964",
+                "responses": {
+                    "200": {
+                        "description": "Profil récupéré",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/UserResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/v1/auth/logout": {
+            "post": {
+                "tags": [
+                    "Session & Profil"
+                ],
+                "summary": "Déconnexion",
+                "operationId": "182690867784db2f411c59f9042017e9",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "all_devices": {
+                                        "description": "Si vrai, révoque tous les tokens de l'utilisateur",
+                                        "type": "boolean",
+                                        "example": false
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Déconnexion réussie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Déconnexion réussie."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/v1/user/devices": {
+            "get": {
+                "tags": [
+                    "Appareils & Push"
+                ],
+                "summary": "Lister mes appareils",
+                "operationId": "abfb60678ae96818836847399bcea2a8",
+                "responses": {
+                    "200": {
+                        "description": "Liste des appareils récupérée"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Appareils & Push"
+                ],
+                "summary": "Enregistrer un appareil (Push Token)",
+                "operationId": "8cf2847c7f48dafb39a6d9d3f26bc094",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "push_token",
+                                    "platform"
+                                ],
+                                "properties": {
+                                    "push_token": {
+                                        "type": "string"
+                                    },
+                                    "platform": {
+                                        "type": "string",
+                                        "enum": [
+                                            "android",
+                                            "ios",
+                                            "web"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Appareil enregistré"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/v1/user/favorites": {
+            "get": {
+                "tags": [
+                    "Favoris"
+                ],
+                "summary": "Lister mes favoris",
+                "operationId": "977293ddaf306576e7d3ec07e0584786",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Filtrer par type (ex: App\\Models\\Quiz)",
+                        "required": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des favoris"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/v1/user/favorites/toggle": {
+            "post": {
+                "tags": [
+                    "Favoris"
+                ],
+                "summary": "Ajouter/Retirer un favori",
+                "operationId": "2e2768ec4436c97f166c8cd449090144",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "favorable_type",
+                                    "favorable_id"
+                                ],
+                                "properties": {
+                                    "favorable_type": {
+                                        "type": "string",
+                                        "example": "App\\Models\\Quiz"
+                                    },
+                                    "favorable_id": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Action réussie"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/v1/user/profile": {
+            "get": {
+                "tags": [
+                    "Profil Utilisateur"
+                ],
+                "summary": "Récupérer mon profil",
+                "operationId": "62aee4194a4920c278f65308506289d8",
+                "responses": {
+                    "200": {
+                        "description": "Profil récupéré",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserProfileResource"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Profil Utilisateur"
+                ],
+                "summary": "Mettre à jour mon profil",
+                "operationId": "e2445b687c456979e6264d0350bd7b8f",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateUserProfileRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profil mis à jour",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserProfileResource"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/v1/user/profile/onboarding": {
+            "patch": {
+                "tags": [
+                    "Profil Utilisateur"
+                ],
+                "summary": "Terminer l'onboarding",
+                "operationId": "a7eb1eab31723f95e2319c9b8aed0d06",
+                "responses": {
+                    "200": {
+                        "description": "Onboarding marqué comme terminé"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "StoreUserDeviceRequest": {
+                "required": [
+                    "push_token",
+                    "platform"
+                ],
+                "properties": {
+                    "push_token": {
+                        "type": "string"
+                    },
+                    "platform": {
+                        "type": "string",
+                        "enum": [
+                            "android",
+                            "ios",
+                            "web"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateUserProfileRequest": {
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "example": "jean_doe"
+                    },
+                    "level": {
+                        "type": "string",
+                        "enum": [
+                            "primary",
+                            "middle_school",
+                            "high_school",
+                            "higher_ed"
+                        ]
+                    },
+                    "class": {
+                        "type": "string",
+                        "example": "Terminale D"
+                    },
+                    "region": {
+                        "type": "string",
+                        "enum": [
+                            "maritime",
+                            "plateaux",
+                            "centrale",
+                            "kara",
+                            "savanes"
+                        ]
+                    },
+                    "city": {
+                        "type": "string",
+                        "example": "Lomé"
+                    },
+                    "dark_mode": {
+                        "type": "boolean"
+                    },
+                    "notifications_on": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "AuthTokenResource": {
+                "properties": {
+                    "access_token": {
+                        "type": "string"
+                    },
+                    "token_type": {
+                        "type": "string",
+                        "example": "Bearer"
+                    },
+                    "expires_in": {
+                        "type": "integer",
+                        "example": 7776000
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/UserResource"
+                    },
+                    "is_new_user": {
+                        "type": "boolean",
+                        "example": false
+                    }
+                },
+                "type": "object"
+            },
+            "UserDeviceResource": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "push_token": {
+                        "type": "string"
+                    },
+                    "platform": {
+                        "type": "string"
+                    },
+                    "last_active_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "UserFavoriteResource": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "favorable_type": {
+                        "type": "string"
+                    },
+                    "favorable_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "UserProfileResource": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "username": {
+                        "type": "string"
+                    },
+                    "level": {
+                        "type": "string"
+                    },
+                    "class": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "region": {
+                        "type": "string"
+                    },
+                    "city": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "dark_mode": {
+                        "type": "boolean"
+                    },
+                    "notifications_on": {
+                        "type": "boolean"
+                    },
+                    "onboarding_done": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "UserResource": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "role": {
+                        "type": "string"
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "sanctum": {
+                "type": "http",
+                "description": "Utilisez le token retourné lors de la connexion.",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Authentification Email",
+            "description": "Endpoints pour la connexion et l'inscription classique"
+        },
+        {
+            "name": "Authentification OTP",
+            "description": "Endpoints pour la connexion et l'inscription via téléphone"
+        },
+        {
+            "name": "Session & Profil",
+            "description": "Endpoints pour la gestion de la session utilisateur"
+        },
+        {
+            "name": "Appareils & Push",
+            "description": "Gestion des tokens de notification"
+        },
+        {
+            "name": "Favoris",
+            "description": "Gestion des éléments favoris"
+        },
+        {
+            "name": "Profil Utilisateur",
+            "description": "Gestion des profils et préférences"
+        }
+    ]
+}
