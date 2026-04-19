@@ -4,23 +4,23 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use OpenApi\Attributes as OA;
 
-/**
- * @OA\Schema(
- *     schema="CourseResource",
- *
- *     @OA\Property(property="id", type="string", format="uuid"),
- *     @OA\Property(property="establishment_id", type="string", format="uuid"),
- *     @OA\Property(property="name", type="string", example="Licence Informatique"),
- *     @OA\Property(property="level", type="string", example="licence"),
- *     @OA\Property(property="description", type="string", example="..."),
- *     @OA\Property(property="duration_months", type="integer", example=36),
- *     @OA\Property(property="annual_fees", type="number", example=50000),
- *     @OA\Property(property="accreditation", type="string", example="AMESRES"),
- *     @OA\Property(property="created_at", type="string", format="date-time"),
- *     @OA\Property(property="updated_at", type="string", format="date-time")
- * )
- */
+#[OA\Schema(
+    schema: 'CourseResource',
+    properties: [
+        new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+        new OA\Property(property: 'establishment_id', type: 'string', format: 'uuid'),
+        new OA\Property(property: 'name', type: 'string', example: 'Licence Informatique'),
+        new OA\Property(property: 'level', type: 'string', example: 'licence'),
+        new OA\Property(property: 'description', type: 'string', example: '...'),
+        new OA\Property(property: 'duration_months', type: 'integer', example: 36),
+        new OA\Property(property: 'annual_fees', type: 'number', example: 50000),
+        new OA\Property(property: 'accreditation', type: 'string', example: 'AMESRES'),
+        new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+        new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
+    ]
+)]
 class CourseResource extends JsonResource
 {
     /**

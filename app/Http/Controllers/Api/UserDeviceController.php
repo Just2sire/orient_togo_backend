@@ -19,10 +19,21 @@ class UserDeviceController extends Controller
     #[OA\Get(
         path: "/v1/user/devices",
         summary: "Lister mes appareils",
+        operationId: "getUserDevices",
         security: [["sanctum" => []]],
         tags: ["Appareils & Push"]
     )]
-    #[OA\Response(response: 200, description: "Liste des appareils récupérée")]
+    #[OA\Response(
+        response: 200,
+        description: "Liste des appareils récupérée",
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: "success", type: "boolean", example: true),
+                new OA\Property(property: "message", type: "string"),
+                new OA\Property(property: "data", type: "array", items: new OA\Items(ref: "#/components/schemas/UserDeviceResource")),
+            ]
+        )
+    )]
     public function index(Request $request): JsonResponse
     {
         return $this->service->index($request->user());
@@ -31,6 +42,7 @@ class UserDeviceController extends Controller
     #[OA\Post(
         path: "/v1/user/devices",
         summary: "Enregistrer un appareil (Push Token)",
+        operationId: "registerUserDevice",
         security: [["sanctum" => []]],
         tags: ["Appareils & Push"]
     )]
@@ -44,7 +56,17 @@ class UserDeviceController extends Controller
             ]
         )
     )]
-    #[OA\Response(response: 200, description: "Appareil enregistré")]
+    #[OA\Response(
+        response: 200,
+        description: "Appareil enregistré",
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: "success", type: "boolean", example: true),
+                new OA\Property(property: "message", type: "string"),
+                new OA\Property(property: "data", ref: "#/components/schemas/UserDeviceResource"),
+            ]
+        )
+    )]
     public function store(StoreUserDeviceRequest $request): JsonResponse
     {
         return $this->service->register($request->user(), $request);

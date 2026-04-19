@@ -22,6 +22,7 @@ class SessionController extends Controller
     #[OA\Get(
         path: '/v1/auth/me',
         summary: 'Récupérer le profil connecté',
+        operationId: 'authMe',
         security: [['sanctum' => []]],
         tags: ['Session & Profil']
     )]
@@ -33,7 +34,7 @@ class SessionController extends Controller
             new OA\Property(property: 'data', ref: '#/components/schemas/UserResource'),
         ])
     )]
-    #[OA\Response(response: 401, description: 'Non authentifié')]
+    #[OA\Response(response: 401, description: 'Non authentifié', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))]
     public function me(Request $request): JsonResponse
     {
         return $this->try(function () use ($request) {
@@ -44,9 +45,11 @@ class SessionController extends Controller
     #[OA\Post(
         path: '/v1/auth/logout',
         summary: 'Déconnexion',
+        operationId: 'authLogout',
         security: [['sanctum' => []]],
         tags: ['Session & Profil']
     )]
+
     #[OA\RequestBody(
         content: new OA\JsonContent(properties: [
             new OA\Property(property: 'all_devices', description: "Si vrai, révoque tous les tokens de l'utilisateur", type: 'boolean', example: false),
@@ -60,7 +63,7 @@ class SessionController extends Controller
             new OA\Property(property: 'message', type: 'string', example: 'Déconnexion réussie.'),
         ])
     )]
-    #[OA\Response(response: 401, description: 'Non authentifié')]
+    #[OA\Response(response: 401, description: 'Non authentifié', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))]
     public function logout(Request $request): JsonResponse
     {
         return $this->try(function () use ($request) {

@@ -4,22 +4,22 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use OpenApi\Attributes as OA;
 
-/**
- * @OA\Schema(
- *     schema="GrowthSectorResource",
- *
- *     @OA\Property(property="id", type="string", format="uuid"),
- *     @OA\Property(property="name", type="string", example="Technologie"),
- *     @OA\Property(property="description", type="string", example="..."),
- *     @OA\Property(property="color_hex", type="string", example="#0066FF"),
- *     @OA\Property(property="icon_code", type="string", example="laptop"),
- *     @OA\Property(property="annual_growth", type="number", example=12.5),
- *     @OA\Property(property="opportunities_description", type="string", example="..."),
- *     @OA\Property(property="created_at", type="string", format="date-time"),
- *     @OA\Property(property="updated_at", type="string", format="date-time")
- * )
- */
+#[OA\Schema(
+    schema: 'GrowthSectorResource',
+    properties: [
+        new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+        new OA\Property(property: 'name', type: 'string', example: 'Technologie'),
+        new OA\Property(property: 'description', type: 'string', example: '...'),
+        new OA\Property(property: 'color_hex', type: 'string', example: '#0066FF'),
+        new OA\Property(property: 'icon_code', type: 'string', example: 'laptop'),
+        new OA\Property(property: 'annual_growth', type: 'number', example: 12.5),
+        new OA\Property(property: 'opportunities_description', type: 'string', example: '...'),
+        new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+        new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
+    ]
+)]
 class GrowthSectorResource extends JsonResource
 {
     /**

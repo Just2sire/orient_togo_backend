@@ -25,6 +25,7 @@ class OtpController extends Controller
     #[OA\Post(
         path: '/v1/auth/otp/send',
         summary: 'Demander un code OTP',
+        operationId: 'sendOtp',
         tags: ['Authentification OTP']
     )]
     #[OA\RequestBody(
@@ -47,7 +48,7 @@ class OtpController extends Controller
             ]
         )
     )]
-    #[OA\Response(response: 422, description: 'Erreur de validation')]
+    #[OA\Response(response: 422, description: 'Erreur de validation', content: new OA\JsonContent(ref: '#/components/schemas/ValidationErrorResponse'))]
     public function send(SendOtpRequest $request): JsonResponse
     {
         return $this->try(function () use ($request) {
@@ -63,6 +64,7 @@ class OtpController extends Controller
     #[OA\Post(
         path: '/v1/auth/otp/verify',
         summary: "Vérifier l'OTP et se connecter",
+        operationId: 'verifyOtp',
         tags: ['Authentification OTP']
     )]
     #[OA\RequestBody(
@@ -87,7 +89,7 @@ class OtpController extends Controller
             ]
         )
     )]
-    #[OA\Response(response: 500, description: 'Code invalide ou expiré')]
+    #[OA\Response(response: 401, description: 'Code invalide ou expiré', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))]
     public function verify(VerifyOtpRequest $request): JsonResponse
     {
         return $this->try(function () use ($request) {

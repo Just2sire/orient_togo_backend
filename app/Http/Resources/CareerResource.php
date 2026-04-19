@@ -4,24 +4,25 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use OpenApi\Attributes as OA;
 
-/**
- * @OA\Schema(
- *     schema="CareerResource",
- *
- *     @OA\Property(property="id", type="string", format="uuid"),
- *     @OA\Property(property="name", type="string", example="Développeur Fullstack"),
- *     @OA\Property(property="description", type="string", example="Création d'applications web..."),
- *     @OA\Property(property="required_skills", type="array", @OA\Items(type="string")),
- *     @OA\Property(property="market_demand", type="integer", example=9),
- *     @OA\Property(property="salary_min", type="integer", example=300000),
- *     @OA\Property(property="salary_max", type="integer", example=800000),
- *     @OA\Property(property="long_description", type="string", example="..."),
- *     @OA\Property(property="is_promising", type="boolean", example=true),
- *     @OA\Property(property="created_at", type="string", format="date-time"),
- *     @OA\Property(property="updated_at", type="string", format="date-time")
- * )
- */
+#[OA\Schema(
+    schema: 'CareerResource',
+    properties: [
+        new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+        new OA\Property(property: 'name', type: 'string', example: 'Développeur Fullstack'),
+        new OA\Property(property: 'description', type: 'string', example: 'Création d’applications web...'),
+        new OA\Property(property: 'required_skills', type: 'array', items: new OA\Items(type: 'string')),
+        new OA\Property(property: 'market_demand', type: 'integer', example: 9),
+        new OA\Property(property: 'salary_min', type: 'integer', example: 300000),
+        new OA\Property(property: 'salary_max', type: 'integer', example: 800000),
+        new OA\Property(property: 'long_description', type: 'string', example: '...'),
+        new OA\Property(property: 'is_promising', type: 'boolean', example: true),
+        new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+        new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
+    ],
+    type: 'object'
+)]
 class CareerResource extends JsonResource
 {
     /**

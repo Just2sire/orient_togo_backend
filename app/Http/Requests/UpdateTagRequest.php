@@ -3,16 +3,16 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use OpenApi\Attributes as OA;
 
-/**
- * @OA\Schema(
- *     schema="UpdateTagRequest",
- *
- *     @OA\Property(property="label", type="string", example="Exemple de label"),
- *     @OA\Property(property="category", type="string", example="Exemple de category"),
- *     @OA\Property(property="description", type="string", example="Exemple de description"),
- * )
- */
+#[OA\Schema(
+    schema: 'UpdateTagRequest',
+    properties: [
+        new OA\Property(property: 'label', type: 'string', example: 'Exemple de label'),
+        new OA\Property(property: 'category', type: 'string', example: 'Exemple de category'),
+        new OA\Property(property: 'description', type: 'string', example: 'Exemple de description'),
+    ]
+)]
 class UpdateTagRequest extends FormRequest
 {
     public function authorize(): bool

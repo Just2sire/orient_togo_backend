@@ -23,6 +23,7 @@ class EmailAuthController extends Controller
     #[OA\Post(
         path: '/v1/auth/login',
         summary: 'Connexion par email',
+        operationId: 'loginWithEmail',
         tags: ['Authentification Email']
     )]
     #[OA\RequestBody(
@@ -41,10 +42,11 @@ class EmailAuthController extends Controller
         description: 'Connexion réussie',
         content: new OA\JsonContent(properties: [
             new OA\Property(property: 'success', type: 'boolean', example: true),
+            new OA\Property(property: 'message', type: 'string'),
             new OA\Property(property: 'data', ref: '#/components/schemas/AuthTokenResource'),
         ])
     )]
-    #[OA\Response(response: 401, description: 'Identifiants invalides')]
+    #[OA\Response(response: 401, description: 'Identifiants invalides', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse'))]
     public function login(LoginWithEmailRequest $request): JsonResponse
     {
         return $this->try(function () use ($request) {
@@ -61,6 +63,7 @@ class EmailAuthController extends Controller
     #[OA\Post(
         path: '/v1/auth/register',
         summary: 'Inscription par email',
+        operationId: 'registerWithEmail',
         tags: ['Authentification Email']
     )]
     #[OA\RequestBody(
@@ -84,7 +87,7 @@ class EmailAuthController extends Controller
             new OA\Property(property: 'data', ref: '#/components/schemas/AuthTokenResource'),
         ])
     )]
-    #[OA\Response(response: 422, description: 'Erreur de validation')]
+    #[OA\Response(response: 422, description: 'Erreur de validation', content: new OA\JsonContent(ref: '#/components/schemas/ValidationErrorResponse'))]
     public function register(RegisterWithEmailRequest $request): JsonResponse
     {
         return $this->try(function () use ($request) {

@@ -4,25 +4,25 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use OpenApi\Attributes as OA;
 
-/**
- * @OA\Schema(
- *     schema="SerieResource",
- *
- *     @OA\Property(property="id", type="string", format="uuid"),
- *     @OA\Property(property="code", type="string", example="D"),
- *     @OA\Property(property="label", type="string", example="SVT"),
- *     @OA\Property(property="description", type="string", example="Sciences de la Vie"),
- *     @OA\Property(property="minimum_average", type="number", example=11),
- *     @OA\Property(property="required_profile", type="string", example="Fort en SVT"),
- *     @OA\Property(property="after_bac", type="string", example="Médecine"),
- *     @OA\Property(property="tips", type="string", example="..."),
- *     @OA\Property(property="is_active", type="boolean", example=true),
- *     @OA\Property(property="order", type="integer", example=3),
- *     @OA\Property(property="created_at", type="string", format="date-time"),
- *     @OA\Property(property="updated_at", type="string", format="date-time")
- * )
- */
+#[OA\Schema(
+    schema: 'SerieResource',
+    properties: [
+        new OA\Property(property: 'id', type: 'string', format: 'uuid'),
+        new OA\Property(property: 'code', type: 'string', example: 'D'),
+        new OA\Property(property: 'label', type: 'string', example: 'SVT'),
+        new OA\Property(property: 'description', type: 'string', example: 'Sciences de la Vie'),
+        new OA\Property(property: 'minimum_average', type: 'number', example: 11),
+        new OA\Property(property: 'required_profile', type: 'string', example: 'Fort en SVT'),
+        new OA\Property(property: 'after_bac', type: 'string', example: 'Médecine'),
+        new OA\Property(property: 'tips', type: 'string', example: '...'),
+        new OA\Property(property: 'is_active', type: 'boolean', example: true),
+        new OA\Property(property: 'order', type: 'integer', example: 3),
+        new OA\Property(property: 'created_at', type: 'string', format: 'date-time'),
+        new OA\Property(property: 'updated_at', type: 'string', format: 'date-time'),
+    ]
+)]
 class SerieResource extends JsonResource
 {
     /**

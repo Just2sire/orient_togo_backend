@@ -3,22 +3,22 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use OpenApi\Attributes as OA;
 
-/**
- * @OA\Schema(
- *     schema="UpdateSerieRequest",
- *
- *     @OA\Property(property="code", type="string", example="Exemple de code"),
- *     @OA\Property(property="label", type="string", example="Exemple de label"),
- *     @OA\Property(property="description", type="string", example="Exemple de description"),
- *     @OA\Property(property="minimum_average", type="number", example=99.99),
- *     @OA\Property(property="required_profile", type="string", example="Exemple de required_profile"),
- *     @OA\Property(property="after_bac", type="string", example="Exemple de after_bac"),
- *     @OA\Property(property="tips", type="string", example="Exemple de tips"),
- *     @OA\Property(property="is_active", type="boolean", example=true),
- *     @OA\Property(property="order", type="integer", example=42),
- * )
- */
+#[OA\Schema(
+    schema: 'UpdateSerieRequest',
+    properties: [
+        new OA\Property(property: 'code', type: 'string', example: 'Exemple de code'),
+        new OA\Property(property: 'label', type: 'string', example: 'Exemple de label'),
+        new OA\Property(property: 'description', type: 'string', example: 'Exemple de description'),
+        new OA\Property(property: 'minimum_average', type: 'number', example: 99.99),
+        new OA\Property(property: 'required_profile', type: 'string', example: 'Exemple de required_profile'),
+        new OA\Property(property: 'after_bac', type: 'string', example: 'Exemple de after_bac'),
+        new OA\Property(property: 'tips', type: 'string', example: 'Exemple de tips'),
+        new OA\Property(property: 'is_active', type: 'boolean', example: true),
+        new OA\Property(property: 'order', type: 'integer', example: 42),
+    ]
+)]
 class UpdateSerieRequest extends FormRequest
 {
     public function authorize(): bool

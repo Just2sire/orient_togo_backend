@@ -19,11 +19,22 @@ class UserFavoriteController extends Controller
     #[OA\Get(
         path: "/v1/user/favorites",
         summary: "Lister mes favoris",
+        operationId: "getUserFavorites",
         security: [["sanctum" => []]],
         tags: ["Favoris"]
     )]
-    #[OA\Parameter(name: "type", in: "query", description: "Filtrer par type (ex: App\Models\Quiz)", required: false)]
-    #[OA\Response(response: 200, description: "Liste des favoris")]
+    #[OA\Parameter(name: "type", in: "query", description: "Filtrer par type (ex: App\Models\Quiz)", required: false, schema: new OA\Schema(type: "string"))]
+    #[OA\Response(
+        response: 200,
+        description: "Liste des favoris",
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: "success", type: "boolean", example: true),
+                new OA\Property(property: "message", type: "string"),
+                new OA\Property(property: "data", type: "array", items: new OA\Items(ref: "#/components/schemas/UserFavoriteResource")),
+            ]
+        )
+    )]
     public function index(Request $request): JsonResponse
     {
         return $this->service->index($request->user(), $request->query('type'));
@@ -32,6 +43,7 @@ class UserFavoriteController extends Controller
     #[OA\Post(
         path: "/v1/user/favorites/toggle",
         summary: "Ajouter/Retirer un favori",
+        operationId: "toggleFavorite",
         security: [["sanctum" => []]],
         tags: ["Favoris"]
     )]
@@ -45,9 +57,21 @@ class UserFavoriteController extends Controller
             ]
         )
     )]
-    #[OA\Response(response: 200, description: "Action réussie")]
-    public function toggle(StoreUserFavoriteRequest $request): JsonResponse
+    #[OA\Response(
+        response: 200,
+        description: "Action réussie",
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: "success", type: "boolean", example: true),
+                new OA\Property(property: "message", type: "string"),
+            ]
+        )
+    )]
+    public function toggle(Request $request): JsonResponse
     {
-        return $this->service->toggle($request->user(), $request->validated());
+        return $this->service->toggle($request->user(), $request->validate([
+            'favorable_type' => 'required|string',
+            'favorable_id' => 'required|string',
+        ]));
     }
 }

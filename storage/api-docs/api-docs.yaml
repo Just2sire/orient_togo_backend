@@ -1,0 +1,3461 @@
+openapi: 3.0.0
+info:
+  title: 'OrientTogo API'
+  description: "Documentation officielle de l'API OrientTogo (Laravel 13). \n    Toutes les requêtes doivent être préfixées par `/api/v1`. \n    L'authentification se fait via Laravel Sanctum (Bearer Token)."
+  contact:
+    name: 'Équipe Technique OrientTogo'
+    email: contact@orienttogo.tg
+  version: 1.0.0
+servers:
+  -
+    url: 'http://localhost:8000'
+    description: 'Serveur de développement'
+  -
+    url: /api
+    description: 'Serveur Local (Base Path)'
+paths:
+  /v1/auth/login:
+    post:
+      tags:
+        - 'Authentification Email'
+      summary: 'Connexion par email'
+      operationId: loginWithEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: test@example.com
+                password:
+                  type: string
+                  format: password
+                  example: password123
+                device_name:
+                  type: string
+                  example: 'Chrome Windows'
+              type: object
+      responses:
+        200:
+          description: 'Connexion réussie'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/AuthTokenResource'
+                type: object
+        401:
+          description: 'Identifiants invalides'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/auth/register:
+    post:
+      tags:
+        - 'Authentification Email'
+      summary: 'Inscription par email'
+      operationId: registerWithEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - email
+                - password
+                - password_confirmation
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: newuser@example.com
+                password:
+                  type: string
+                  format: password
+                  example: password123
+                password_confirmation:
+                  type: string
+                  format: password
+                  example: password123
+                device_name:
+                  type: string
+                  example: 'Android App'
+              type: object
+      responses:
+        201:
+          description: 'Compte créé'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'Compte créé avec succès.'
+                  data:
+                    $ref: '#/components/schemas/AuthTokenResource'
+                type: object
+        422:
+          description: 'Erreur de validation'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+  /v1/auth/otp/send:
+    post:
+      tags:
+        - 'Authentification OTP'
+      summary: 'Demander un code OTP'
+      operationId: sendOtp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - phone
+              properties:
+                phone:
+                  description: 'Numéro de téléphone (8 chiffres)'
+                  type: string
+                  example: '90010203'
+                type:
+                  type: string
+                  example: login
+                  enum:
+                    - login
+                    - register
+              type: object
+      responses:
+        200:
+          description: 'Code OTP envoyé'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'Code OTP envoyé avec succès.'
+                type: object
+        422:
+          description: 'Erreur de validation'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+  /v1/auth/otp/verify:
+    post:
+      tags:
+        - 'Authentification OTP'
+      summary: "Vérifier l'OTP et se connecter"
+      operationId: verifyOtp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - phone
+                - code
+              properties:
+                phone:
+                  type: string
+                  example: '90010203'
+                code:
+                  description: 'Code à 6 chiffres reçu par SMS'
+                  type: string
+                  example: '123456'
+                device_name:
+                  type: string
+                  example: 'iPhone 15 Pro'
+              type: object
+      responses:
+        200:
+          description: 'Authentification réussie'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'Authentification réussie.'
+                  data:
+                    $ref: '#/components/schemas/AuthTokenResource'
+                type: object
+        401:
+          description: 'Code invalide ou expiré'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/auth/me:
+    get:
+      tags:
+        - 'Session & Profil'
+      summary: 'Récupérer le profil connecté'
+      operationId: authMe
+      responses:
+        200:
+          description: 'Profil récupéré'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/UserResource'
+                type: object
+        401:
+          description: 'Non authentifié'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+  /v1/auth/logout:
+    post:
+      tags:
+        - 'Session & Profil'
+      summary: Déconnexion
+      operationId: authLogout
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                all_devices:
+                  description: "Si vrai, révoque tous les tokens de l'utilisateur"
+                  type: boolean
+                  example: false
+              type: object
+      responses:
+        200:
+          description: 'Déconnexion réussie'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'Déconnexion réussie.'
+                type: object
+        401:
+          description: 'Non authentifié'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+  /v1/careers:
+    get:
+      tags:
+        - Career
+      summary: 'Liste des careers'
+      description: 'Retourne une liste paginée avec filtres optionnels'
+      operationId: getCareers
+      parameters:
+        -
+          name: page
+          in: query
+          description: 'Numéro de page'
+          required: false
+          schema:
+            type: integer
+            default: 1
+        -
+          name: per_page
+          in: query
+          description: 'Nombre d’éléments par page'
+          required: false
+          schema:
+            type: integer
+            default: 15
+        -
+          name: search
+          in: query
+          description: 'Recherche par nom'
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: 'Liste récupérée avec succès'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CareerResource'
+                  meta:
+                    type: object
+                type: object
+        401:
+          description: 'Non authentifié'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - Career
+      summary: 'Créer un(e) Career'
+      operationId: createCareer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreCareerRequest'
+      responses:
+        201:
+          description: 'Career créé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/CareerResource'
+                type: object
+        422:
+          description: 'Erreur de validation'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+      security:
+        -
+          sanctum: []
+  '/v1/careers/{career}':
+    get:
+      tags:
+        - Career
+      summary: 'Détails d’un(e) Career'
+      operationId: getCareer
+      parameters:
+        -
+          name: career
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: 'Career trouvé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/CareerResource'
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - Career
+      summary: 'Mettre à jour un(e) Career'
+      operationId: updateCareer
+      parameters:
+        -
+          name: career
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCareerRequest'
+      responses:
+        200:
+          description: 'Career mis(e) à jour'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/CareerResource'
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+    delete:
+      tags:
+        - Career
+      summary: 'Supprimer un(e) Career'
+      operationId: deleteCareer
+      parameters:
+        -
+          name: career
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: 'Career supprimé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+  /v1/courses:
+    get:
+      tags:
+        - Course
+      summary: 'Liste des courses'
+      description: 'Retourne une liste paginée avec filtres optionnels'
+      operationId: getCourses
+      parameters:
+        -
+          name: page
+          in: query
+          description: 'Numéro de page'
+          required: false
+          schema:
+            type: integer
+            default: 1
+        -
+          name: per_page
+          in: query
+          description: 'Nombre d’éléments par page'
+          required: false
+          schema:
+            type: integer
+            default: 15
+        -
+          name: search
+          in: query
+          description: 'Recherche par nom'
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: 'Liste récupérée avec succès'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CourseResource'
+                  meta:
+                    type: object
+                type: object
+        401:
+          description: 'Non authentifié'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+    post:
+      tags:
+        - Course
+      summary: 'Créer un(e) Course'
+      operationId: createCourse
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreCourseRequest'
+      responses:
+        201:
+          description: 'Course créé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/CourseResource'
+                type: object
+        422:
+          description: 'Erreur de validation'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+      security:
+        -
+          sanctum: []
+  '/v1/courses/{course}':
+    get:
+      tags:
+        - Course
+      summary: 'Détails d’un(e) Course'
+      operationId: getCourse
+      parameters:
+        -
+          name: course
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: 'Course trouvé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/CourseResource'
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+    put:
+      tags:
+        - Course
+      summary: 'Mettre à jour un(e) Course'
+      operationId: updateCourse
+      parameters:
+        -
+          name: course
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCourseRequest'
+      responses:
+        200:
+          description: 'Course mis(e) à jour'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/CourseResource'
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+    delete:
+      tags:
+        - Course
+      summary: 'Supprimer un(e) Course'
+      operationId: deleteCourse
+      parameters:
+        -
+          name: course
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: 'Course supprimé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+  /v1/establishments:
+    get:
+      tags:
+        - Establishment
+      summary: 'Liste des establishments'
+      description: 'Retourne une liste paginée avec filtres optionnels'
+      operationId: getEstablishments
+      parameters:
+        -
+          name: page
+          in: query
+          description: 'Numéro de page'
+          required: false
+          schema:
+            type: integer
+            default: 1
+        -
+          name: per_page
+          in: query
+          description: 'Nombre d’éléments par page'
+          required: false
+          schema:
+            type: integer
+            default: 15
+        -
+          name: search
+          in: query
+          description: 'Recherche par nom'
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: 'Liste récupérée avec succès'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EstablishmentResource'
+                  meta:
+                    type: object
+                type: object
+        401:
+          description: 'Non authentifié'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - Establishment
+      summary: 'Créer un(e) Establishment'
+      operationId: createEstablishment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreEstablishmentRequest'
+      responses:
+        201:
+          description: 'Establishment créé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/EstablishmentResource'
+                type: object
+        422:
+          description: 'Erreur de validation'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+      security:
+        -
+          sanctum: []
+  '/v1/establishments/{idOrSlug}':
+    get:
+      tags:
+        - Establishment
+      summary: 'Détails d’un(e) Establishment'
+      operationId: getEstablishment
+      parameters:
+        -
+          name: idOrSlug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: 'Establishment trouvé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/EstablishmentResource'
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/v1/establishments/{establishment}':
+    put:
+      tags:
+        - Establishment
+      summary: 'Mettre à jour un(e) Establishment'
+      operationId: updateEstablishment
+      parameters:
+        -
+          name: establishment
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEstablishmentRequest'
+      responses:
+        200:
+          description: 'Establishment mis(e) à jour'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/EstablishmentResource'
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+    delete:
+      tags:
+        - Establishment
+      summary: 'Supprimer un(e) Establishment'
+      operationId: deleteEstablishment
+      parameters:
+        -
+          name: establishment
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: 'Establishment supprimé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+  '/v1/establishments/{establishment}/verify':
+    post:
+      tags:
+        - Establishment
+      summary: 'Valider un établissement (Admin)'
+      operationId: verifyEstablishment
+      parameters:
+        -
+          name: establishment
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Succès
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                type: object
+      security:
+        -
+          sanctum: []
+  /v1/fields:
+    get:
+      tags:
+        - Field
+      summary: 'Liste des fields'
+      description: 'Retourne une liste paginée avec filtres optionnels'
+      operationId: getFields
+      parameters:
+        -
+          name: page
+          in: query
+          description: 'Numéro de page'
+          required: false
+          schema:
+            type: integer
+            default: 1
+        -
+          name: per_page
+          in: query
+          description: 'Nombre d’éléments par page'
+          required: false
+          schema:
+            type: integer
+            default: 15
+        -
+          name: search
+          in: query
+          description: 'Recherche par nom'
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: 'Liste récupérée avec succès'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FieldResource'
+                  meta:
+                    type: object
+                type: object
+        401:
+          description: 'Non authentifié'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - Field
+      summary: 'Créer un(e) Field'
+      operationId: createField
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreFieldRequest'
+      responses:
+        201:
+          description: 'Field créé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/FieldResource'
+                type: object
+        422:
+          description: 'Erreur de validation'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+      security:
+        -
+          sanctum: []
+  '/v1/fields/{field}':
+    get:
+      tags:
+        - Field
+      summary: 'Détails d’un(e) Field'
+      operationId: getField
+      parameters:
+        -
+          name: field
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: 'Field trouvé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/FieldResource'
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - Field
+      summary: 'Mettre à jour un(e) Field'
+      operationId: updateField
+      parameters:
+        -
+          name: field
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFieldRequest'
+      responses:
+        200:
+          description: 'Field mis(e) à jour'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/FieldResource'
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+    delete:
+      tags:
+        - Field
+      summary: 'Supprimer un(e) Field'
+      operationId: deleteField
+      parameters:
+        -
+          name: field
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: 'Field supprimé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+  /v1/growth-sectors:
+    get:
+      tags:
+        - GrowthSector
+      summary: 'Liste des growthSectors'
+      description: 'Retourne une liste paginée avec filtres optionnels'
+      operationId: getGrowthSectors
+      parameters:
+        -
+          name: page
+          in: query
+          description: 'Numéro de page'
+          required: false
+          schema:
+            type: integer
+            default: 1
+        -
+          name: per_page
+          in: query
+          description: 'Nombre d’éléments par page'
+          required: false
+          schema:
+            type: integer
+            default: 15
+        -
+          name: search
+          in: query
+          description: 'Recherche par nom'
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: 'Liste récupérée avec succès'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GrowthSectorResource'
+                  meta:
+                    type: object
+                type: object
+        401:
+          description: 'Non authentifié'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - GrowthSector
+      summary: 'Créer un(e) GrowthSector'
+      operationId: createGrowthSector
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreGrowthSectorRequest'
+      responses:
+        201:
+          description: 'GrowthSector créé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/GrowthSectorResource'
+                type: object
+        422:
+          description: 'Erreur de validation'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+      security:
+        -
+          sanctum: []
+  '/v1/growth-sectors/{growth_sector}':
+    get:
+      tags:
+        - GrowthSector
+      summary: 'Détails d’un(e) GrowthSector'
+      operationId: getGrowthSector
+      parameters:
+        -
+          name: growth_sector
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: 'GrowthSector trouvé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/GrowthSectorResource'
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - GrowthSector
+      summary: 'Mettre à jour un(e) GrowthSector'
+      operationId: updateGrowthSector
+      parameters:
+        -
+          name: growth_sector
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGrowthSectorRequest'
+      responses:
+        200:
+          description: 'GrowthSector mis(e) à jour'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/GrowthSectorResource'
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+    delete:
+      tags:
+        - GrowthSector
+      summary: 'Supprimer un(e) GrowthSector'
+      operationId: deleteGrowthSector
+      parameters:
+        -
+          name: growth_sector
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: 'GrowthSector supprimé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+  /v1/sector-datas:
+    get:
+      tags:
+        - SectorData
+      summary: 'Liste des sectorDatas'
+      description: 'Retourne une liste paginée avec filtres optionnels'
+      operationId: getSectorDatas
+      parameters:
+        -
+          name: page
+          in: query
+          description: 'Numéro de page'
+          required: false
+          schema:
+            type: integer
+            default: 1
+        -
+          name: per_page
+          in: query
+          description: 'Nombre d’éléments par page'
+          required: false
+          schema:
+            type: integer
+            default: 15
+        -
+          name: search
+          in: query
+          description: 'Recherche par nom'
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: 'Liste récupérée avec succès'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SectorDataResource'
+                  meta:
+                    type: object
+                type: object
+        401:
+          description: 'Non authentifié'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+    post:
+      tags:
+        - SectorData
+      summary: 'Créer un(e) SectorData'
+      operationId: createSectorData
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreSectorDataRequest'
+      responses:
+        201:
+          description: 'SectorData créé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/SectorDataResource'
+                type: object
+        422:
+          description: 'Erreur de validation'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+      security:
+        -
+          sanctum: []
+  '/v1/sector-datas/{sector_data}':
+    get:
+      tags:
+        - SectorData
+      summary: 'Détails d’un(e) SectorData'
+      operationId: getSectorData
+      parameters:
+        -
+          name: sector_data
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: 'SectorData trouvé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/SectorDataResource'
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+    put:
+      tags:
+        - SectorData
+      summary: 'Mettre à jour un(e) SectorData'
+      operationId: updateSectorData
+      parameters:
+        -
+          name: sector_data
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSectorDataRequest'
+      responses:
+        200:
+          description: 'SectorData mis(e) à jour'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/SectorDataResource'
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+    delete:
+      tags:
+        - SectorData
+      summary: 'Supprimer un(e) SectorData'
+      operationId: deleteSectorData
+      parameters:
+        -
+          name: sector_data
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: 'SectorData supprimé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+  /v1/series:
+    get:
+      tags:
+        - Serie
+      summary: 'Liste des series'
+      description: 'Retourne une liste paginée avec filtres optionnels'
+      operationId: getSeries
+      parameters:
+        -
+          name: page
+          in: query
+          description: 'Numéro de page'
+          required: false
+          schema:
+            type: integer
+            default: 1
+        -
+          name: per_page
+          in: query
+          description: 'Nombre d’éléments par page'
+          required: false
+          schema:
+            type: integer
+            default: 15
+        -
+          name: search
+          in: query
+          description: 'Recherche par nom'
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: 'Liste récupérée avec succès'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SerieResource'
+                  meta:
+                    type: object
+                type: object
+        401:
+          description: 'Non authentifié'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - Serie
+      summary: 'Créer un(e) Serie'
+      operationId: createSerie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreSerieRequest'
+      responses:
+        201:
+          description: 'Serie créé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/SerieResource'
+                type: object
+        422:
+          description: 'Erreur de validation'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+      security:
+        -
+          sanctum: []
+  /v1/series/accessible:
+    get:
+      tags:
+        - Serie
+      summary: 'Séries accessibles selon la moyenne'
+      operationId: getAccessibleSeries
+      parameters:
+        -
+          name: average
+          in: query
+          required: true
+          schema:
+            type: number
+      responses:
+        200:
+          description: Succès
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SerieResource'
+                type: object
+  '/v1/series/{serie}':
+    get:
+      tags:
+        - Serie
+      summary: 'Détails d’un(e) Serie'
+      operationId: getSerie
+      parameters:
+        -
+          name: serie
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: 'Serie trouvé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/SerieResource'
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - Serie
+      summary: 'Mettre à jour un(e) Serie'
+      operationId: updateSerie
+      parameters:
+        -
+          name: serie
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSerieRequest'
+      responses:
+        200:
+          description: 'Serie mis(e) à jour'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/SerieResource'
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+    delete:
+      tags:
+        - Serie
+      summary: 'Supprimer un(e) Serie'
+      operationId: deleteSerie
+      parameters:
+        -
+          name: serie
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: 'Serie supprimé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+  /v1/subject-coefficients:
+    get:
+      tags:
+        - SubjectCoefficient
+      summary: 'Liste des subjectCoefficients'
+      description: 'Retourne une liste paginée avec filtres optionnels'
+      operationId: getSubjectCoefficients
+      parameters:
+        -
+          name: page
+          in: query
+          description: 'Numéro de page'
+          required: false
+          schema:
+            type: integer
+            default: 1
+        -
+          name: per_page
+          in: query
+          description: 'Nombre d’éléments par page'
+          required: false
+          schema:
+            type: integer
+            default: 15
+        -
+          name: search
+          in: query
+          description: 'Recherche par nom'
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: 'Liste récupérée avec succès'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SubjectCoefficientResource'
+                  meta:
+                    type: object
+                type: object
+        401:
+          description: 'Non authentifié'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+    post:
+      tags:
+        - SubjectCoefficient
+      summary: 'Créer un(e) SubjectCoefficient'
+      operationId: createSubjectCoefficient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreSubjectCoefficientRequest'
+      responses:
+        201:
+          description: 'SubjectCoefficient créé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/SubjectCoefficientResource'
+                type: object
+        422:
+          description: 'Erreur de validation'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+      security:
+        -
+          sanctum: []
+  '/v1/subject-coefficients/{subject_coefficient}':
+    get:
+      tags:
+        - SubjectCoefficient
+      summary: 'Détails d’un(e) SubjectCoefficient'
+      operationId: getSubjectCoefficient
+      parameters:
+        -
+          name: subject_coefficient
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: 'SubjectCoefficient trouvé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/SubjectCoefficientResource'
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+    put:
+      tags:
+        - SubjectCoefficient
+      summary: 'Mettre à jour un(e) SubjectCoefficient'
+      operationId: updateSubjectCoefficient
+      parameters:
+        -
+          name: subject_coefficient
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSubjectCoefficientRequest'
+      responses:
+        200:
+          description: 'SubjectCoefficient mis(e) à jour'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/SubjectCoefficientResource'
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+    delete:
+      tags:
+        - SubjectCoefficient
+      summary: 'Supprimer un(e) SubjectCoefficient'
+      operationId: deleteSubjectCoefficient
+      parameters:
+        -
+          name: subject_coefficient
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: 'SubjectCoefficient supprimé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+  /v1/tags:
+    get:
+      tags:
+        - Tag
+      summary: 'Liste des tags'
+      description: 'Retourne une liste paginée avec filtres optionnels'
+      operationId: getTags
+      parameters:
+        -
+          name: page
+          in: query
+          description: 'Numéro de page'
+          required: false
+          schema:
+            type: integer
+            default: 1
+        -
+          name: per_page
+          in: query
+          description: "Nombre d'éléments par page"
+          required: false
+          schema:
+            type: integer
+            default: 15
+        -
+          name: search
+          in: query
+          description: 'Recherche par nom'
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: 'Liste récupérée avec succès'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TagResource'
+                  meta:
+                    type: object
+                type: object
+        401:
+          description: 'Non authentifié'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+    post:
+      tags:
+        - Tag
+      summary: 'Créer un(e) Tag'
+      operationId: createTag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreTagRequest'
+      responses:
+        201:
+          description: 'Tag créé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/TagResource'
+                type: object
+        422:
+          description: 'Erreur de validation'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+      security:
+        -
+          sanctum: []
+  '/v1/tags/{tag}':
+    get:
+      tags:
+        - Tag
+      summary: "Détails d'un(e) Tag"
+      operationId: getTag
+      parameters:
+        -
+          name: tag
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: 'Tag trouvé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/TagResource'
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+    put:
+      tags:
+        - Tag
+      summary: 'Mettre à jour un(e) Tag'
+      operationId: updateTag
+      parameters:
+        -
+          name: tag
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTagRequest'
+      responses:
+        200:
+          description: 'Tag mis(e) à jour'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/TagResource'
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+    delete:
+      tags:
+        - Tag
+      summary: 'Supprimer un(e) Tag'
+      operationId: deleteTag
+      parameters:
+        -
+          name: tag
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: 'Tag supprimé(e)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                type: object
+        404:
+          description: 'Non trouvé(e)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        -
+          sanctum: []
+  /v1/user/devices:
+    get:
+      tags:
+        - 'Appareils & Push'
+      summary: 'Lister mes appareils'
+      operationId: getUserDevices
+      responses:
+        200:
+          description: 'Liste des appareils récupérée'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserDeviceResource'
+                type: object
+      security:
+        -
+          sanctum: []
+    post:
+      tags:
+        - 'Appareils & Push'
+      summary: 'Enregistrer un appareil (Push Token)'
+      operationId: registerUserDevice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - push_token
+                - platform
+              properties:
+                push_token:
+                  type: string
+                platform:
+                  type: string
+                  enum:
+                    - android
+                    - ios
+                    - web
+              type: object
+      responses:
+        200:
+          description: 'Appareil enregistré'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/UserDeviceResource'
+                type: object
+      security:
+        -
+          sanctum: []
+  /v1/user/favorites:
+    get:
+      tags:
+        - Favoris
+      summary: 'Lister mes favoris'
+      operationId: getUserFavorites
+      parameters:
+        -
+          name: type
+          in: query
+          description: 'Filtrer par type (ex: App\Models\Quiz)'
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: 'Liste des favoris'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserFavoriteResource'
+                type: object
+      security:
+        -
+          sanctum: []
+  /v1/user/favorites/toggle:
+    post:
+      tags:
+        - Favoris
+      summary: 'Ajouter/Retirer un favori'
+      operationId: toggleFavorite
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - favorable_type
+                - favorable_id
+              properties:
+                favorable_type:
+                  type: string
+                  example: App\Models\Quiz
+                favorable_id:
+                  type: string
+                  format: uuid
+              type: object
+      responses:
+        200:
+          description: 'Action réussie'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                type: object
+      security:
+        -
+          sanctum: []
+  /v1/user/profile:
+    get:
+      tags:
+        - 'Profil Utilisateur'
+      summary: 'Récupérer mon profil'
+      operationId: getUserProfile
+      responses:
+        200:
+          description: 'Profil récupéré'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/UserProfileResource'
+                type: object
+      security:
+        -
+          sanctum: []
+    put:
+      tags:
+        - 'Profil Utilisateur'
+      summary: 'Mettre à jour mon profil'
+      operationId: updateUserProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserProfileRequest'
+      responses:
+        200:
+          description: 'Profil mis à jour'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/UserProfileResource'
+                type: object
+      security:
+        -
+          sanctum: []
+  /v1/user/profile/onboarding:
+    patch:
+      tags:
+        - 'Profil Utilisateur'
+      summary: "Terminer l'onboarding"
+      operationId: completeUserOnboarding
+      responses:
+        200:
+          description: 'Onboarding marqué comme terminé'
+          content:
+            application/json:
+              schema:
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                type: object
+      security:
+        -
+          sanctum: []
+components:
+  schemas:
+    ErrorResponse:
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: 'Une erreur est survenue.'
+      type: object
+    ValidationErrorResponse:
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: 'Les données fournies sont invalides.'
+        errors:
+          properties:
+            field_name:
+              type: array
+              items:
+                type: string
+                example: 'Le champ est obligatoire.'
+          type: object
+      type: object
+    StoreCareerRequest:
+      required:
+        - name
+        - description
+        - required_skills
+        - market_demand
+        - salary_min
+        - salary_max
+        - long_description
+        - is_promising
+      properties:
+        name:
+          type: string
+          example: 'Développeur Fullstack'
+        description:
+          type: string
+          example: 'Création d’applications web...'
+        required_skills:
+          type: array
+          items:
+            type: string
+        market_demand:
+          type: integer
+          example: 9
+        salary_min:
+          type: integer
+          example: 300000
+        salary_max:
+          type: integer
+          example: 800000
+        long_description:
+          type: string
+          example: ...
+        is_promising:
+          type: boolean
+          example: true
+      type: object
+    StoreCourseRequest:
+      required:
+        - establishment_id
+        - name
+        - level
+        - description
+        - duration_months
+        - annual_fees
+        - accreditation
+      properties:
+        establishment_id:
+          type: string
+          example: 'Exemple de establishment_id'
+        name:
+          type: string
+          example: 'Exemple de name'
+        level:
+          type: string
+          example: 'Exemple de level'
+        description:
+          type: string
+          example: 'Exemple de description'
+        duration_months:
+          type: integer
+          example: 42
+        annual_fees:
+          type: number
+          example: 99.99
+        accreditation:
+          type: string
+          example: 'Exemple de accreditation'
+      type: object
+    StoreEstablishmentRequest:
+      required:
+        - name
+        - type
+        - region
+        - city
+        - address
+        - email
+        - phone
+        - website
+        - description
+        - fees_info
+        - specialties
+        - is_public
+        - is_verified
+        - verification_status
+        - is_selected
+        - latitude
+        - longitude
+      properties:
+        name:
+          type: string
+          example: 'Exemple de name'
+        type:
+          type: string
+          example: 'Exemple de type'
+        region:
+          type: string
+          example: 'Exemple de region'
+        city:
+          type: string
+          example: 'Exemple de city'
+        address:
+          type: string
+          example: 'Exemple de address'
+        email:
+          type: string
+          example: user@example.com
+        phone:
+          type: string
+          example: '+22890123456'
+        website:
+          type: string
+          example: 'Exemple de website'
+        description:
+          type: string
+          example: 'Exemple de description'
+        fees_info:
+          type: string
+          example: 'Exemple de fees_info'
+        specialties:
+          type: array
+          items:
+            type: string
+        is_public:
+          type: boolean
+          example: true
+        is_verified:
+          type: boolean
+          example: true
+        verification_status:
+          type: string
+          example: 'Exemple de verification_status'
+        is_selected:
+          type: boolean
+          example: true
+        latitude:
+          type: number
+          example: 99.99
+        longitude:
+          type: number
+          example: 99.99
+      type: object
+    StoreFieldRequest:
+      required:
+        - name
+        - description
+        - estimated_duration_years
+        - main_domain
+        - is_selected
+      properties:
+        name:
+          type: string
+          example: 'Exemple de name'
+        description:
+          type: string
+          example: 'Exemple de description'
+        estimated_duration_years:
+          type: number
+          example: 99.99
+        main_domain:
+          type: string
+          example: 'Exemple de main_domain'
+        is_selected:
+          type: boolean
+          example: true
+      type: object
+    StoreGrowthSectorRequest:
+      required:
+        - name
+        - description
+        - color_hex
+        - icon_code
+        - annual_growth
+        - opportunities_description
+      properties:
+        name:
+          type: string
+          example: 'Exemple de name'
+        description:
+          type: string
+          example: 'Exemple de description'
+        color_hex:
+          type: string
+          example: 'Exemple de color_hex'
+        icon_code:
+          type: string
+          example: 'Exemple de icon_code'
+        annual_growth:
+          type: number
+          example: 99.99
+        opportunities_description:
+          type: string
+          example: 'Exemple de opportunities_description'
+      type: object
+    StoreSectorDataRequest:
+      required:
+        - career_id
+        - growth_sector_id
+        - year
+        - average_salary
+        - employment_rate
+        - offers_per_year
+        - notes
+      properties:
+        career_id:
+          type: string
+          example: 'Exemple de career_id'
+        growth_sector_id:
+          type: string
+          example: 'Exemple de growth_sector_id'
+        year:
+          type: integer
+          example: 42
+        average_salary:
+          type: integer
+          example: 42
+        employment_rate:
+          type: number
+          example: 99.99
+        offers_per_year:
+          type: integer
+          example: 42
+        notes:
+          type: string
+          example: 'Exemple de notes'
+      type: object
+    StoreSerieRequest:
+      required:
+        - code
+        - label
+        - description
+        - minimum_average
+        - is_active
+        - order
+      properties:
+        code:
+          type: string
+          example: D
+        label:
+          type: string
+          example: SVT
+        description:
+          type: string
+          example: 'Sciences de la Vie'
+        minimum_average:
+          type: number
+          example: 11
+        required_profile:
+          type: string
+          example: 'Fort en SVT'
+        after_bac:
+          type: string
+          example: Médecine
+        tips:
+          type: array
+          items:
+            type: string
+        is_active:
+          type: boolean
+          example: true
+        order:
+          type: integer
+          example: 42
+      type: object
+    StoreSubjectCoefficientRequest:
+      required:
+        - serie_id
+        - subject_name
+        - coefficient
+        - minimum_grade
+      properties:
+        serie_id:
+          type: string
+          example: 'Exemple de serie_id'
+        subject_name:
+          type: string
+          example: 'Exemple de subject_name'
+        coefficient:
+          type: integer
+          example: 42
+        minimum_grade:
+          type: number
+          example: 99.99
+      type: object
+    StoreTagRequest:
+      required:
+        - label
+        - category
+        - description
+      properties:
+        label:
+          type: string
+          example: 'Exemple de label'
+        category:
+          type: string
+          example: 'Exemple de category'
+        description:
+          type: string
+          example: 'Exemple de description'
+      type: object
+    StoreUserDeviceRequest:
+      required:
+        - push_token
+        - platform
+      properties:
+        push_token:
+          type: string
+        platform:
+          type: string
+          enum:
+            - android
+            - ios
+            - web
+      type: object
+    UpdateCareerRequest:
+      properties:
+        name:
+          type: string
+          example: 'Développeur Fullstack'
+        description:
+          type: string
+          example: 'Création d’applications web...'
+        required_skills:
+          type: array
+          items:
+            type: string
+        market_demand:
+          type: integer
+          example: 9
+        salary_min:
+          type: integer
+          example: 300000
+        salary_max:
+          type: integer
+          example: 800000
+        long_description:
+          type: string
+          example: ...
+        is_promising:
+          type: boolean
+          example: true
+      type: object
+    UpdateCourseRequest:
+      properties:
+        establishment_id:
+          type: string
+          example: 'Exemple de establishment_id'
+        name:
+          type: string
+          example: 'Exemple de name'
+        level:
+          type: string
+          example: 'Exemple de level'
+        description:
+          type: string
+          example: 'Exemple de description'
+        duration_months:
+          type: integer
+          example: 42
+        annual_fees:
+          type: number
+          example: 99.99
+        accreditation:
+          type: string
+          example: 'Exemple de accreditation'
+      type: object
+    UpdateEstablishmentRequest:
+      properties:
+        name:
+          type: string
+          example: 'Exemple de name'
+        type:
+          type: string
+          example: 'Exemple de type'
+        region:
+          type: string
+          example: 'Exemple de region'
+        city:
+          type: string
+          example: 'Exemple de city'
+        address:
+          type: string
+          example: 'Exemple de address'
+        email:
+          type: string
+          example: user@example.com
+        phone:
+          type: string
+          example: '+22890123456'
+        website:
+          type: string
+          example: 'Exemple de website'
+        description:
+          type: string
+          example: 'Exemple de description'
+        fees_info:
+          type: string
+          example: 'Exemple de fees'
+        specialties:
+          type: array
+          items:
+            type: string
+          example:
+            - Maths
+            - Physique
+        is_public:
+          type: boolean
+          example: true
+        is_verified:
+          type: boolean
+          example: true
+        verification_status:
+          type: string
+          example: 'Exemple de verification_status'
+        is_selected:
+          type: boolean
+          example: true
+        latitude:
+          type: number
+          example: 99.99
+        longitude:
+          type: number
+          example: 99.99
+      type: object
+    UpdateFieldRequest:
+      properties:
+        name:
+          type: string
+          example: 'Exemple de name'
+        description:
+          type: string
+          example: 'Exemple de description'
+        estimated_duration_years:
+          type: number
+          example: 99.99
+        main_domain:
+          type: string
+          example: 'Exemple de main_domain'
+        is_selected:
+          type: boolean
+          example: true
+      type: object
+    UpdateGrowthSectorRequest:
+      properties:
+        name:
+          type: string
+          example: 'Exemple de name'
+        description:
+          type: string
+          example: 'Exemple de description'
+        color_hex:
+          type: string
+          example: 'Exemple de color_hex'
+        icon_code:
+          type: string
+          example: 'Exemple de icon_code'
+        annual_growth:
+          type: number
+          example: 99.99
+        opportunities_description:
+          type: string
+          example: 'Exemple de opportunities_description'
+      type: object
+    UpdateSectorDataRequest:
+      properties:
+        career_id:
+          type: string
+          example: 'Exemple de career_id'
+        growth_sector_id:
+          type: string
+          example: 'Exemple de growth_sector_id'
+        year:
+          type: integer
+          example: 42
+        average_salary:
+          type: integer
+          example: 42
+        employment_rate:
+          type: number
+          example: 99.99
+        offers_per_year:
+          type: integer
+          example: 42
+        notes:
+          type: string
+          example: 'Exemple de notes'
+      type: object
+    UpdateSerieRequest:
+      properties:
+        code:
+          type: string
+          example: 'Exemple de code'
+        label:
+          type: string
+          example: 'Exemple de label'
+        description:
+          type: string
+          example: 'Exemple de description'
+        minimum_average:
+          type: number
+          example: 99.99
+        required_profile:
+          type: string
+          example: 'Exemple de required_profile'
+        after_bac:
+          type: string
+          example: 'Exemple de after_bac'
+        tips:
+          type: string
+          example: 'Exemple de tips'
+        is_active:
+          type: boolean
+          example: true
+        order:
+          type: integer
+          example: 42
+      type: object
+    UpdateSubjectCoefficientRequest:
+      properties:
+        serie_id:
+          type: string
+          example: 'Exemple de serie_id'
+        subject_name:
+          type: string
+          example: 'Exemple de subject_name'
+        coefficient:
+          type: integer
+          example: 42
+        minimum_grade:
+          type: number
+          example: 99.99
+      type: object
+    UpdateTagRequest:
+      properties:
+        label:
+          type: string
+          example: 'Exemple de label'
+        category:
+          type: string
+          example: 'Exemple de category'
+        description:
+          type: string
+          example: 'Exemple de description'
+      type: object
+    UpdateUserProfileRequest:
+      properties:
+        username:
+          type: string
+          example: jean_doe
+        level:
+          type: string
+          enum:
+            - primary
+            - middle_school
+            - high_school
+            - higher_ed
+        class:
+          type: string
+          example: 'Terminale D'
+        region:
+          type: string
+          enum:
+            - maritime
+            - plateaux
+            - centrale
+            - kara
+            - savanes
+        city:
+          type: string
+          example: Lomé
+        dark_mode:
+          type: boolean
+        notifications_on:
+          type: boolean
+      type: object
+    AuthTokenResource:
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+          example: 7776000
+        user:
+          $ref: '#/components/schemas/UserResource'
+        is_new_user:
+          type: boolean
+          example: false
+      type: object
+    CareerResource:
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'Développeur Fullstack'
+        description:
+          type: string
+          example: 'Création d’applications web...'
+        required_skills:
+          type: array
+          items:
+            type: string
+        market_demand:
+          type: integer
+          example: 9
+        salary_min:
+          type: integer
+          example: 300000
+        salary_max:
+          type: integer
+          example: 800000
+        long_description:
+          type: string
+          example: ...
+        is_promising:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      type: object
+    CourseResource:
+      properties:
+        id:
+          type: string
+          format: uuid
+        establishment_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'Licence Informatique'
+        level:
+          type: string
+          example: licence
+        description:
+          type: string
+          example: ...
+        duration_months:
+          type: integer
+          example: 36
+        annual_fees:
+          type: number
+          example: 50000
+        accreditation:
+          type: string
+          example: AMESRES
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      type: object
+    EstablishmentResource:
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'Exemple de name'
+        type:
+          type: string
+          example: 'Exemple de type'
+        region:
+          type: string
+          example: 'Exemple de region'
+        city:
+          type: string
+          example: 'Exemple de city'
+        address:
+          type: string
+          example: 'Exemple de address'
+        email:
+          type: string
+          example: user@example.com
+        phone:
+          type: string
+          example: '+22890123456'
+        website:
+          type: string
+          example: 'Exemple de website'
+        description:
+          type: string
+          example: 'Exemple de description'
+        fees:
+          type: string
+          example: 'Exemple de fees'
+        specialties:
+          type: string
+          example: 'Exemple de specialties'
+        is_public:
+          type: boolean
+          example: true
+        is_verified:
+          type: boolean
+          example: true
+        verification_status:
+          type: string
+          example: 'Exemple de verification_status'
+        est_selectionne:
+          type: boolean
+          example: true
+        latitude:
+          type: number
+          example: 99.99
+        longitude:
+          type: number
+          example: 99.99
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      type: object
+    FieldResource:
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Informatique
+        description:
+          type: string
+          example: 'Développement logiciel...'
+        estimated_duration_years:
+          type: number
+          example: 3
+        main_domain:
+          type: string
+          example: ingenierie
+        is_selected:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      type: object
+    GrowthSectorResource:
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Technologie
+        description:
+          type: string
+          example: ...
+        color_hex:
+          type: string
+          example: '#0066FF'
+        icon_code:
+          type: string
+          example: laptop
+        annual_growth:
+          type: number
+          example: 12.5
+        opportunities_description:
+          type: string
+          example: ...
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      type: object
+    SectorDataResource:
+      properties:
+        id:
+          type: string
+          format: uuid
+        career_id:
+          type: string
+          example: 'Exemple de career_id'
+        growth_sector_id:
+          type: string
+          example: 'Exemple de growth_sector_id'
+        year:
+          type: integer
+          example: 42
+        average_salary:
+          type: integer
+          example: 42
+        employment_rate:
+          type: number
+          example: 99.99
+        offers_per_year:
+          type: integer
+          example: 42
+        notes:
+          type: string
+          example: 'Exemple de notes'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      type: object
+    SerieResource:
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+          example: D
+        label:
+          type: string
+          example: SVT
+        description:
+          type: string
+          example: 'Sciences de la Vie'
+        minimum_average:
+          type: number
+          example: 11
+        required_profile:
+          type: string
+          example: 'Fort en SVT'
+        after_bac:
+          type: string
+          example: Médecine
+        tips:
+          type: string
+          example: ...
+        is_active:
+          type: boolean
+          example: true
+        order:
+          type: integer
+          example: 3
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      type: object
+    SubjectCoefficientResource:
+      properties:
+        id:
+          type: string
+          format: uuid
+        serie_id:
+          type: string
+          format: uuid
+        subject_name:
+          type: string
+          example: Mathématiques
+        coefficient:
+          type: integer
+          example: 4
+        minimum_grade:
+          type: number
+          example: 10
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      type: object
+    TagResource:
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: string
+          example: 'Exemple de label'
+        category:
+          type: string
+          example: 'Exemple de category'
+        description:
+          type: string
+          example: 'Exemple de description'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      type: object
+    UserDeviceResource:
+      properties:
+        id:
+          type: string
+          format: uuid
+        push_token:
+          type: string
+        platform:
+          type: string
+        last_active_at:
+          type: string
+          format: date-time
+      type: object
+    UserFavoriteResource:
+      properties:
+        id:
+          type: string
+          format: uuid
+        favorable_type:
+          type: string
+        favorable_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+      type: object
+    UserProfileResource:
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        level:
+          type: string
+        class:
+          type: string
+          nullable: true
+        region:
+          type: string
+        city:
+          type: string
+          nullable: true
+        dark_mode:
+          type: boolean
+        notifications_on:
+          type: boolean
+        onboarding_done:
+          type: boolean
+      type: object
+    UserResource:
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          nullable: true
+        role:
+          type: string
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      type: object
+  securitySchemes:
+    sanctum:
+      type: http
+      description: 'Utilisez le token retourné lors de la connexion (login ou verify OTP).'
+      bearerFormat: JWT
+      scheme: bearer
+tags:
+  -
+    name: 'Authentification Email'
+    description: "Endpoints pour la connexion et l'inscription classique"
+  -
+    name: 'Authentification OTP'
+    description: "Endpoints pour la connexion et l'inscription via téléphone"
+  -
+    name: 'Session & Profil'
+    description: 'Endpoints pour la gestion de la session utilisateur'
+  -
+    name: Career
+    description: 'Gestion des careers'
+  -
+    name: Course
+    description: 'Gestion des courses'
+  -
+    name: Establishment
+    description: 'Gestion des establishments'
+  -
+    name: Field
+    description: 'Gestion des fields'
+  -
+    name: GrowthSector
+    description: 'Gestion des growthSectors'
+  -
+    name: SectorData
+    description: 'Gestion des sectorDatas'
+  -
+    name: Serie
+    description: 'Gestion des series'
+  -
+    name: SubjectCoefficient
+    description: 'Gestion des subjectCoefficients'
+  -
+    name: Tag
+    description: 'Gestion des tags'
+  -
+    name: 'Appareils & Push'
+    description: 'Gestion des tokens de notification'
+  -
+    name: Favoris
+    description: 'Gestion des éléments favoris'
+  -
+    name: 'Profil Utilisateur'
+    description: 'Gestion des profils et préférences'

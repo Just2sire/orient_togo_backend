@@ -3,18 +3,18 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use OpenApi\Attributes as OA;
 
-/**
- * @OA\Schema(
- *     schema="StoreSubjectCoefficientRequest",
- *     required={["serie_id","subject_name","coefficient","minimum_grade"]},
- *
- *     @OA\Property(property="serie_id", type="string", example="Exemple de serie_id"),
- *     @OA\Property(property="subject_name", type="string", example="Exemple de subject_name"),
- *     @OA\Property(property="coefficient", type="integer", example=42),
- *     @OA\Property(property="minimum_grade", type="number", example=99.99),
- * )
- */
+#[OA\Schema(
+    schema: "StoreSubjectCoefficientRequest",
+    required: ["serie_id", "subject_name", "coefficient", "minimum_grade"],
+    properties: [
+        new OA\Property(property: "serie_id", type: "string", example: "Exemple de serie_id"),
+        new OA\Property(property: "subject_name", type: "string", example: "Exemple de subject_name"),
+        new OA\Property(property: "coefficient", type: "integer", example: 42),
+        new OA\Property(property: "minimum_grade", type: "number", example: 99.99),
+    ]
+)]
 class StoreSubjectCoefficientRequest extends FormRequest
 {
     public function authorize(): bool
