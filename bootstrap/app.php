@@ -15,5 +15,24 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(\App\Http\Middleware\LogRequestMiddleware::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->respond(function (\Illuminate\Http\Response|\Illuminate\Http\JsonResponse $response, \Throwable $exception, \Illuminate\Http\Request $request) {
+            if ($request->is('api/*')) {
+                if ($exception instanceof \Illuminate\Validation\ValidationException) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $exception->getMessage(),
+                        'errors' => $exception->errors(),
+                    ], 422);
+                }
+
+                if ($exception instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Ressource introuvable.',
+                    ], 404);
+                }
+            }
+
+            return $response;
+        });
     })->create();

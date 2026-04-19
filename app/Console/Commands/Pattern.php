@@ -360,7 +360,6 @@ class Pattern extends Command
 
         foreach (
             [
-                'use App\\Models\\Traits\\HasOrganization;',
                 'use Illuminate\\Database\\Eloquent\\Concerns\\HasUuids;',
             ] as $import
         ) {
@@ -375,7 +374,7 @@ class Pattern extends Command
 
         $content = preg_replace(
             '/use HasFactory;/',
-            'use HasFactory, HasUuids, HasOrganization;',
+            'use HasFactory, HasUuids;',
             $content
         );
 
@@ -1893,7 +1892,7 @@ PHP;
     private function mapTypeToValidation(string $type): string
     {
         return match (strtolower($type)) {
-            'string', 'text' => 'string|max:255',
+            'string', 'text' => "string', 'max:255",
             'integer', 'int' => 'integer',
             'float', 'decimal', 'double' => 'numeric',
             'boolean', 'bool' => 'boolean',

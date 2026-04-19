@@ -4,7 +4,7 @@ namespace App\Traits;
 
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-// use Illuminate\Http\JsonResponse as HttpJsonResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -30,7 +30,7 @@ trait ApiResponse
         string $message = 'Opération réussie.',
         int $status = 200,
         array $meta = []
-    ): \Illuminate\Http\JsonResponse {
+    ): JsonResponse {
         $payload = [
             'success' => true,
             'message' => $message,
@@ -56,7 +56,7 @@ trait ApiResponse
     protected function created(
         mixed $data = null,
         string $message = 'Ressource créée avec succès.'
-    ): \Illuminate\Http\JsonResponse {
+    ): JsonResponse {
         return $this->success($data, $message, 201);
     }
 
@@ -66,7 +66,7 @@ trait ApiResponse
     protected function updated(
         mixed $data = null,
         string $message = 'Ressource mise à jour avec succès.'
-    ): \Illuminate\Http\JsonResponse {
+    ): JsonResponse {
         return $this->success($data, $message, 200);
     }
 
@@ -108,7 +108,7 @@ trait ApiResponse
         LengthAwarePaginator $paginator,
         ?string $resourceClass = null,
         string $message = 'Données récupérées avec succès.'
-    ): \Illuminate\Http\JsonResponse {
+    ): JsonResponse {
         $items = $resourceClass
             ? $resourceClass::collection($paginator->items())
             : $paginator->items();
@@ -138,7 +138,7 @@ trait ApiResponse
         Collection|array $items,
         string $message = 'Données récupérées avec succès.',
         int $status = 200
-    ): \Illuminate\Http\JsonResponse {
+    ): JsonResponse {
         return $this->success($items, $message, $status);
     }
 
@@ -159,7 +159,7 @@ trait ApiResponse
         int $status = 400,
         ?array $errors = null,
         mixed $debug = null
-    ): \Illuminate\Http\JsonResponse {
+    ): JsonResponse {
         $payload = [
             'success' => false,
             'message' => $message,
@@ -184,7 +184,7 @@ trait ApiResponse
     protected function validationError(
         array $errors = [],
         string $message = 'Les données fournies sont invalides.'
-    ): \Illuminate\Http\JsonResponse {
+    ): JsonResponse {
         return response()->json([
             'success' => false,
             'message' => $message,
@@ -197,7 +197,7 @@ trait ApiResponse
      */
     protected function notFound(
         string $message = 'Ressource introuvable.'
-    ): \Illuminate\Http\JsonResponse {
+    ): JsonResponse {
         return $this->error($message, 404);
     }
 
@@ -206,7 +206,7 @@ trait ApiResponse
      */
     protected function unauthorized(
         string $message = 'Authentification requise.'
-    ): \Illuminate\Http\JsonResponse {
+    ): JsonResponse {
         return $this->error($message, 401);
     }
 
@@ -215,7 +215,7 @@ trait ApiResponse
      */
     protected function forbidden(
         string $message = 'Vous n\'êtes pas autorisé à effectuer cette action.'
-    ): \Illuminate\Http\JsonResponse {
+    ): JsonResponse {
         return $this->error($message, 403);
     }
 
@@ -224,7 +224,7 @@ trait ApiResponse
      */
     protected function conflict(
         string $message = 'Un conflit est survenu avec la ressource existante.'
-    ): \Illuminate\Http\JsonResponse {
+    ): JsonResponse {
         return $this->error($message, 409);
     }
 
@@ -233,7 +233,7 @@ trait ApiResponse
      */
     protected function tooManyRequests(
         string $message = 'Trop de requêtes. Veuillez réessayer plus tard.'
-    ): \Illuminate\Http\JsonResponse {
+    ): JsonResponse {
         return $this->error($message, 429);
     }
 
@@ -245,7 +245,7 @@ trait ApiResponse
     protected function serverError(
         string $message = 'Erreur interne du serveur.',
         ?\Throwable $exception = null
-    ): \Illuminate\Http\JsonResponse {
+    ): JsonResponse {
         $debug = null;
 
         if ($exception !== null && config('app.debug')) {
@@ -266,7 +266,7 @@ trait ApiResponse
      */
     protected function serviceUnavailable(
         string $message = 'Le service est temporairement indisponible.'
-    ): \Illuminate\Http\JsonResponse {
+    ): JsonResponse {
         return $this->error($message, 503);
     }
 
@@ -286,7 +286,7 @@ trait ApiResponse
         string $successMessage = 'Opération réussie.',
         string $errorMessage = 'Opération échouée.',
         mixed $data = null
-    ): \Illuminate\Http\JsonResponse {
+    ): JsonResponse {
         return $condition
             ? $this->success($data, $successMessage)
             : $this->error($errorMessage, 400);
@@ -304,7 +304,7 @@ trait ApiResponse
     protected function try(
         callable $callback,
         ?string $errorMessage = null
-    ): \Illuminate\Http\JsonResponse {
+    ): JsonResponse {
         try {
             return $callback();
         } catch (ModelNotFoundException) {

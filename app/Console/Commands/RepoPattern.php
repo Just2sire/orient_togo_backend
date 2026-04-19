@@ -722,7 +722,7 @@ interface {$name}RepositoryInterface
      *
      * @param  array<string, mixed>  \$filters
      */
-    public function paginate(array \$filters = [], int \$perPage = 15): LengthAwarePaginator;
+    public function paginate(array \$filters = [], int \$perPage = 10): LengthAwarePaginator;
 
     /**
      * Retourne tous les {$plural} sans pagination.
@@ -780,7 +780,7 @@ class {$name}Repository implements {$name}RepositoryInterface
 {
     public function __construct(private readonly {$name} \$model) {}
 
-    public function paginate(array \$filters = [], int \$perPage = 15): LengthAwarePaginator
+    public function paginate(array \$filters = [], int \$perPage = 10): LengthAwarePaginator
     {
         return \$this->model->query()
             ->when(\$filters['search'] ?? null, fn (\$q, \$v) => \$q->where('name', 'like', "%{\$v}%"))
@@ -880,7 +880,7 @@ PHP;
             $useRepository = "\nuse App\\Repositories\\Contracts\\{$name}RepositoryInterface;";
             $useModel = "\nuse App\\Models\\{$name};";
             $constructor = "    public function __construct(\n        private readonly {$name}RepositoryInterface \$repository\n    ) {}";
-            $indexBody = "\$paginator = \$this->repository->paginate(\$request->all(), \$request->integer('per_page', 15));\n            return \$this->paginated(\$paginator".($hasRes ? ", {$name}Resource::class" : '').');';
+            $indexBody = "\$paginator = \$this->repository->paginate(\$request->all(), \$request->integer('per_page', 10));\n            return \$this->paginated(\$paginator".($hasRes ? ", {$name}Resource::class" : '').');';
             $showBody = "\$model = \$this->repository->findOrFail(\${$var}->id);\n            return \$this->success({$dataWrap('$model')}, '{$name} récupéré.');";
             $storeBody = "\$model = \$this->repository->create({$storeData});\n            return \$this->created({$dataWrap('$model')});";
             $updateBody = "\$model = \$this->repository->update(\${$var}, {$updateData});\n            return \$this->updated({$dataWrap('$model')});";
@@ -892,7 +892,7 @@ PHP;
             $useModel = "\nuse App\\Models\\{$name};";
             $useDB = "\nuse Illuminate\\Support\\Facades\\DB;";
             $constructor = '';
-            $indexBody = "\${$plural} = {$name}::query()\n                ->when(\$request->search, fn (\$q, \$v) => \$q->where('name', 'like', \"%{\$v}%\"))\n                ->latest()\n                ->paginate(\$request->integer('per_page', 15));\n            return \$this->paginated(\${$plural}".($hasRes ? ", {$name}Resource::class" : '').');';
+            $indexBody = "\${$plural} = {$name}::query()\n                ->when(\$request->search, fn (\$q, \$v) => \$q->where('name', 'like', \"%{\$v}%\"))\n                ->latest()\n                ->paginate(\$request->integer('per_page', 10));\n            return \$this->paginated(\${$plural}".($hasRes ? ", {$name}Resource::class" : '').');';
             $showBody = "return \$this->success({$dataWrap('$'.$var)}, '{$name} récupéré.');";
             $storeBody = "\$model = DB::transaction(fn () => {$name}::create({$storeData}));\n            return \$this->created({$dataWrap('$model')});";
             $updateBody = "DB::transaction(fn () => \${$var}->update({$updateData}));\n            return \$this->updated({$dataWrap('$'.$var.'->fresh()')});";
