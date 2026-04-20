@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
@@ -14,6 +15,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+
+        // Ensure 'student' role exists for 'web' guard
+        if (!Role::where('name', 'student')->where('guard_name', 'web')->exists()) {
+            Role::create(['name' => 'student', 'guard_name' => 'web']);
+        }
 
         $this->call([
             RolePermissionSeeder::class,
